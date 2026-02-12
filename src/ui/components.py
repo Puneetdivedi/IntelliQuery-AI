@@ -1,0 +1,109 @@
+"""
+Reusable Streamlit UI components for IntelliQuery AI.
+"""
+
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+from typing import Any, Dict
+
+def message_box(role: str, content: str, error: bool = False):
+    """
+    Display a chat message with robust styling.
+    
+    Args:
+        role: 'user' or 'assistant'
+        content: The text content
+        error: If true, style as error
+    """
+    with st.chat_message(role):
+        if error:
+            st.error(content)
+        else:
+            st.markdown(content)
+
+def sql_display(query: str):
+    """Display SQL query with a copy button."""
+    if not query:
+        return
+        
+    st.markdown("### 🔍 Generated SQL")
+    st.code(query, language="sql")
+
+def data_table_display(df: pd.DataFrame, max_rows: int = 100):
+    """Display a dataframe with download options."""
+    if df is None or df.empty:
+        st.info("No data to display.")
+        return
+
+    st.markdown(f"### 📊 Data Preview ({len(df)} rows)")
+    
+    # Show subset for performance
+    display_df = df.head(max_rows)
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    
+    # Download buttons
+    csv = df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "⬇️ Download CSV",
+        csv,
+        "query_results.csv",
+        "text/csv",
+        key=f"download_csv_{len(df)}"
+    )
+
+def visualization_display(viz_data: Dict[str, Any]):
+    """Display Plotly chart."""
+    if not viz_data or not viz_data.get("figure"):
+        return
+
+    st.markdown("### 📈 Visualization")
+    st.plotly_chart(viz_data["figure"], use_container_width=True)
+    
+    if viz_data.get("title"):
+        st.caption(viz_data["title"])
+
+def insights_card(insights: Dict[str, Any]):
+    """Display insights in a styled card."""
+    if not insights:
+        return
+
+    st.markdown("### 💡 AI Insights")
+    
+    with st.container():
+        # Summary
+        if insights.get("summary"):
+            st.info(f"**Executive Summary:** {insights['summary']}")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if insights.get("key_insights"):
+                st.markdown("**Key Takeaways:**")
+                for item in insights["key_insights"]:
+                    st.markdown(f"- {item}")
+                    
+        with col2:
+            if insights.get("recommendations"):
+                st.markdown("**Recommendations:**")
+                for item in insights["recommendations"]:
+                    st.markdown(f"- {item}")
+
+def schema_viewer(schema: Dict[str, list]):
+    """Sidebar component to explore database schema."""
+    if not schema:
+        st.warning("Schema not available")
+        return
+
+    st.sidebar.markdown("### 🗄️ Database Schema")
+    
+    for table, columns in schema.items():
+        with st.sidebar.expander(f"📄 {table}"):
+            for col in columns:
+                 icon = "🔑" if col.get("primary_key") else "🔹"
+                 st.markdown(f"{icon} **{col['name']}**")
+                 st.caption(f"Type: {col['type']}")
+
+def loading_animation(message: str = "Processing..."):
+    """Show a spinner with custom message."""
+    return st.spinner(message)
