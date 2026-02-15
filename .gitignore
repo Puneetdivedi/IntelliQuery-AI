@@ -10,8 +10,12 @@ env/
 # Environment
 .env
 
-# Logs
 logs/*.log
+*.log
+
+# Database
+*.db
+intelliquery.db
 
 # Outputs
 outputs/reports/*.pdf
@@ -29,3 +33,6 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Nested Repo
+IntelliQuery-AI/
