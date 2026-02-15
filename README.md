@@ -18,7 +18,7 @@ IntelliQuery AI translates natural language questions into SQL queries, executes
 
 ### Prerequisites
 - Python 3.10+
-- PostgreSQL database (Local or Supabase)
+- PostgreSQL or SQLite (Default)
 - Groq Cloud API Key (Free)
 
 ### Installation
@@ -72,7 +72,7 @@ The system uses a multi-agent architecture orchestrated to handle the BI pipelin
 
 - **LLM:** Groq API (Llama 3.1 70B)
 - **Framework:** LangChain, Streamlit
-- **Database:** PostgreSQL (SQLAlchemy)
+- **Database:** SQLite or PostgreSQL (SQLAlchemy)
 - **Visualization:** Plotly
 - **Reports:** ReportLab, Python-Docx
 - **Testing:** Pytest
