@@ -258,7 +258,7 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
-    st.caption("v1.0.1 | Built with IntelliQuery AI")
+    st.caption("🚀 v1.1.0 | Built with IntelliQuery AI")
 
 
 # ── Main Chat Interface ──────────────────────────────────────────────────────
