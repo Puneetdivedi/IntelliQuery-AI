@@ -236,6 +236,12 @@ with st.sidebar:
              
     st.divider()
 
+    # Utilities
+    if st.button("🧹 Clear Cache", use_container_width=True):
+        st.cache_data.clear()
+        st.cache_resource.clear()
+        st.toast("Cache cleared successfully!")
+
     # Export History
     if st.session_state.messages:
         chat_str = json.dumps(st.session_state.messages, default=str, indent=2)
