@@ -9,7 +9,7 @@ from typing import Dict, Any
 
 from src.config.settings import Settings
 from src.agents.orchestrator import Orchestrator
-from src.database.connection import get_table_info
+from src.database.connection import get_table_info, test_connection
 from src.ui.components import (
     message_box,
     sql_display,
@@ -216,6 +216,19 @@ with st.sidebar:
              st.rerun()
 
     st.divider()
+    
+    # System Status
+    with st.expander("System Status"):
+         if test_connection():
+             st.success("Database: Connected")
+         else:
+             st.error("Database: Connection Failed")
+         
+         if Settings.GROQ_API_KEY.startswith("gsk_"):
+             st.success("LLM API: Configured")
+         else:
+             st.warning("LLM API: Missing/Invalid")
+
     if st.button("🗑️ Clear History", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
