@@ -23,6 +23,69 @@ from src.utils.logger import setup_logger
 
 logger = setup_logger("app")
 
+def display_agent_result(result: Dict[str, Any]):
+    """Render the full result dictionary from the agent."""
+    # 1. SQL
+    sql = result.get("sql_query")
+    if sql:
+        with st.expander("View SQL Query", expanded=False):
+            st.code(sql, language="sql")
+
+    # 2. Data
+    df = result.get("results")
+    if df is not None and not df.empty:
+        st.dataframe(df.head(100), use_container_width=True)
+        
+        # Download CSV
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            "⬇️ Download CSV", 
+            csv, 
+            "data.csv", 
+            "text/csv", 
+            key=f"csv_{int(time.time())}_{len(str(result))}"
+        )
+    elif result.get("status") == "completed_no_data":
+        st.warning("Query returned no results.")
+
+    # 3. Visualization
+    viz = result.get("visualization")
+    if viz and viz.get("figure"):
+            st.plotly_chart(viz["figure"], use_container_width=True)
+
+    # 4. Insights
+    insights = result.get("insights")
+    if insights and insights.get("summary") != "Could not generate AI insights at this time.":
+        with st.container():
+            st.markdown("### 💡 AI Insights")
+            st.info(insights.get("summary"))
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                if insights.get("key_insights"):
+                    st.markdown("**Key Takeaways**")
+                    for k in insights["key_insights"]:
+                        st.markdown(f"- {k}")
+            with c2:
+                if insights.get("recommendations"):
+                    st.markdown("**Recommendations**")
+                    for r in insights["recommendations"]:
+                        st.markdown(f"- {r}")
+
+    # 5. Reports
+    reports = result.get("reports")
+    if reports:
+        c1, c2 = st.columns(2)
+        with c1:
+            if reports.get("pdf"):
+                with open(reports["pdf"], "rb") as f:
+                    st.download_button("📄 Download PDF Report", f, file_name="report.pdf", mime="application/pdf", key=f"pdf_{int(time.time())}")
+        with c2:
+            if reports.get("docx"):
+                with open(reports["docx"], "rb") as f:
+                    st.download_button("📝 Download Word Report", f, file_name="report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"docx_{int(time.time())}")
+
+
 # ── Configuration ────────────────────────────────────────────────────────────
 
 st.set_page_config(
@@ -111,65 +174,8 @@ def process_user_input(prompt: str):
 
         # ── Display Results ────────────────────────────────────────────────
         
-        # 1. SQL
-        sql = result.get("sql_query")
-        if sql:
-            with st.expander("View SQL Query", expanded=False):
-                st.code(sql, language="sql")
-
-        # 2. Data
-        df = result.get("results")
-        if df is not None and not df.empty:
-            st.dataframe(df.head(100), use_container_width=True)
-            
-            # Download CSV
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                "⬇️ Download CSV", 
-                csv, 
-                "data.csv", 
-                "text/csv", 
-                key=f"csv_{len(st.session_state.messages)}"
-            )
-        elif result.get("status") == "completed_no_data":
-            st.warning("Query returned no results.")
-
-        # 3. Visualization
-        viz = result.get("visualization")
-        if viz and viz.get("figure"):
-             st.plotly_chart(viz["figure"], use_container_width=True)
-
-        # 4. Insights
-        insights = result.get("insights")
-        if insights and insights.get("summary") != "Could not generate AI insights at this time.":
-            with st.container():
-                st.markdown("### 💡 AI Insights")
-                st.info(insights.get("summary"))
-                
-                c1, c2 = st.columns(2)
-                with c1:
-                    if insights.get("key_insights"):
-                        st.markdown("**Key Takeaways**")
-                        for k in insights["key_insights"]:
-                            st.markdown(f"- {k}")
-                with c2:
-                    if insights.get("recommendations"):
-                        st.markdown("**Recommendations**")
-                        for r in insights["recommendations"]:
-                            st.markdown(f"- {r}")
-
-        # 5. Reports
-        reports = result.get("reports")
-        if reports:
-            c1, c2 = st.columns(2)
-            with c1:
-                if reports.get("pdf"):
-                    with open(reports["pdf"], "rb") as f:
-                        st.download_button("📄 Download PDF Report", f, file_name="report.pdf", mime="application/pdf")
-            with c2:
-                if reports.get("docx"):
-                    with open(reports["docx"], "rb") as f:
-                        st.download_button("📝 Download Word Report", f, file_name="report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        # ── Display Results ────────────────────────────────────────────────
+        display_agent_result(result)
         
         # Save interaction to history
         st.session_state.messages.append({
@@ -214,6 +220,9 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
+    st.markdown("---")
+    st.caption("v1.0.1 | Built with IntelliQuery AI")
+
 
 # ── Main Chat Interface ──────────────────────────────────────────────────────
 
@@ -230,21 +239,8 @@ for msg in st.session_state.messages:
             if msg.get("error"):
                  st.error(msg["content"])
             elif msg.get("type") == "result_dict":
-                # Re-render result from history
-                # Ideally refactor display logic into a function to reuse here
-                # For brevity, just showing summary
-                res = msg["content"]
-                if res.get("sql_query"):
-                    st.code(res["sql_query"], language="sql")
-                
-                if res.get("results") is not None and not res["results"].empty:
-                    st.dataframe(res["results"].head(5), use_container_width=True) # smaller preview in history
-                
-                if res.get("visualization") and res["visualization"].get("figure"):
-                    st.plotly_chart(res["visualization"]["figure"], use_container_width=True)
-                
-                if res.get("insights"):
-                     st.info(res["insights"].get("summary"))
+                # Re-render result from history using the shared function
+                display_agent_result(msg["content"])
 
 
 # Input
