@@ -85,6 +85,10 @@ def display_agent_result(result: Dict[str, Any]):
             if reports.get("docx"):
                 with open(reports["docx"], "rb") as f:
                     st.download_button("📝 Download Word Report", f, file_name="report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"docx_{int(time.time())}")
+    
+    # 6. Metadata
+    if result.get("metadata"):
+        st.caption(f"⏱️ Executed in {result['metadata'].get('execution_time', 0)}s | Rows: {result['metadata'].get('row_count', 0)}")
 
 
 # ── Configuration ────────────────────────────────────────────────────────────
