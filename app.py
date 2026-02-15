@@ -5,6 +5,7 @@ IntelliQuery AI - Main Streamlit Application
 import streamlit as st
 import pandas as pd
 import time
+import json
 from typing import Dict, Any
 
 from src.config.settings import Settings
@@ -228,6 +229,19 @@ with st.sidebar:
              st.success("LLM API: Configured")
          else:
              st.warning("LLM API: Missing/Invalid")
+             
+    st.divider()
+
+    # Export History
+    if st.session_state.messages:
+        chat_str = json.dumps(st.session_state.messages, default=str, indent=2)
+        st.download_button(
+            "💾 Export Conversation",
+            chat_str,
+            file_name=f"intelliquery_chat_{int(time.time())}.json",
+            mime="application/json",
+            use_container_width=True
+        )
 
     if st.button("🗑️ Clear History", use_container_width=True):
         st.session_state.messages = []
