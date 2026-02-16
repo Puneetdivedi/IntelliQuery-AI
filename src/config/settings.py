@@ -26,9 +26,11 @@ class Settings:
         "postgresql://user:password@localhost:5432/intelliquery_db",
     )
 
-    # ── LLM Model ────────────────────────────────────────────────────
-    LLM_MODEL: str = "llama-3.1-70b-versatile"
-    LLM_TEMPERATURE: float = 0.0  # deterministic SQL generation
+    # ── LLM Configuration ────────────────────────────────────────────
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq").lower() # 'groq' or 'ollama'
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "llama-3.1-70b-versatile")
+    LLM_TEMPERATURE: float = 0.0
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
     # ── Paths ────────────────────────────────────────────────────────
     PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
@@ -48,14 +50,20 @@ class Settings:
     @classmethod
     def validate(cls) -> None:
         """Log warnings for missing settings and treat placeholders as empty."""
-        # Detect common placeholders
-        placeholders = ["your_actual_key_here", "gsk_your_key_here", "your_groq_api_key"]
-        if not cls.GROQ_API_KEY or any(p in cls.GROQ_API_KEY.lower() for p in placeholders) or len(cls.GROQ_API_KEY) < 10:
-            from src.utils.logger import setup_logger
-            logger = setup_logger("settings")
-            logger.warning("Valid GROQ_API_KEY not found. Application will run in DEMO MODE.")
-            cls.GROQ_API_KEY = "" # Clear placeholder
-            cls.DEMO_MODE = True
+        from src.utils.logger import setup_logger
+        logger = setup_logger("settings")
+
+        if cls.LLM_PROVIDER == "ollama":
+            logger.info(f"Ollama provider selected (Model: {cls.LLM_MODEL})")
+            # We don't strictly validate Ollama connectivity here to avoid slow startup
+        else:
+            # Groq validation
+            placeholders = ["your_actual_key_here", "gsk_your_key_here", "your_groq_api_key"]
+            if not cls.GROQ_API_KEY or any(p in cls.GROQ_API_KEY.lower() for p in placeholders) or len(cls.GROQ_API_KEY) < 10:
+                logger.warning("Valid GROQ_API_KEY not found. Falling back to DEMO MODE or checking for Local LLM.")
+                cls.GROQ_API_KEY = "" # Clear placeholder
+                if cls.LLM_PROVIDER == "groq":
+                    cls.DEMO_MODE = True
         
         if not cls.DATABASE_URL:
             raise ValueError("DATABASE_URL is required.")

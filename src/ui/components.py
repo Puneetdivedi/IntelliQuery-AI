@@ -5,6 +5,7 @@ Reusable Streamlit UI components for IntelliQuery AI.
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from time import time
 from typing import Any, Dict
 
 def message_box(role: str, content: str, error: bool = False):
@@ -108,6 +109,56 @@ def schema_viewer(schema: Dict[str, list]):
                  icon = "🔑" if col.get("primary_key") else "🔹"
                  st.markdown(f"{icon} **{col['name']}**")
                  st.caption(f"Type: {col['type']}")
+
+def display_agent_result(result: Dict[str, Any]):
+    """Render the full result dictionary from the orchestrator using modular components."""
+    # 1. SQL Query
+    sql_display(result.get("sql_query"))
+
+    # 2. Data Table
+    df = result.get("results")
+    if df is not None:
+        data_table_display(df)
+    elif result.get("status") == "completed_no_data":
+        st.warning(result.get("answer", "No data found for this query."))
+
+    # 3. Visualization
+    visualization_display(result.get("visualization"))
+
+    # 4. Insights
+    insights_card(result.get("insights"))
+
+    # 5. Reports (Download Links)
+    reports = result.get("reports")
+    if reports:
+        st.markdown("### 📄 Reports")
+        c1, c2 = st.columns(2)
+        with c1:
+            if reports.get("pdf"):
+                with open(reports["pdf"], "rb") as f:
+                    st.download_button(
+                        label="📄 Download PDF Report",
+                        data=f,
+                        file_name="intelliquery_report.pdf",
+                        mime="application/pdf",
+                        key=f"dl_pdf_{time()}"
+                    )
+        with c2:
+            if reports.get("docx"):
+                with open(reports["docx"], "rb") as f:
+                    st.download_button(
+                        label="📝 Download Word Report",
+                        data=f,
+                        file_name="intelliquery_report.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key=f"dl_docx_{time()}"
+                    )
+    
+    # 6. Performance Metadata
+    meta = result.get("metadata")
+    if meta:
+        st.markdown("---")
+        st.caption(f"⏱️ **Performance:** {meta.get('execution_time', 0)}s | **Rows:** {meta.get('row_count', 0)}")
 
 def loading_animation(message: str = "Processing..."):
     """Show a spinner with custom message."""

@@ -26,17 +26,32 @@ class SQLAgent:
     """Agent responsible for translating natural language to SQL and executing it."""
 
     def __init__(self):
-        """Initialize the SQL Agent with LLM and schema context."""
+        """Initialize the SQL Agent with LLM (Groq or Ollama) and schema context."""
         Settings.validate()
         
-        if Settings.GROQ_API_KEY:
+        self.llm = None
+        
+        if Settings.LLM_PROVIDER == "ollama":
+            try:
+                from langchain_community.chat_models import ChatOllama
+                self.llm = ChatOllama(
+                    model=Settings.LLM_MODEL,
+                    temperature=Settings.LLM_TEMPERATURE,
+                    base_url=Settings.OLLAMA_BASE_URL
+                )
+                logger.info(f"SQLAgent initialized with Local LLM (Ollama: {Settings.LLM_MODEL})")
+            except Exception as e:
+                logger.error(f"Failed to initialize Ollama: {e}")
+        
+        elif Settings.GROQ_API_KEY:
             self.llm = ChatGroq(
                 model_name=Settings.LLM_MODEL,
-                temperature=0,
+                temperature=Settings.LLM_TEMPERATURE,
                 api_key=Settings.GROQ_API_KEY
             )
-        else:
-            self.llm = None
+            logger.info(f"SQLAgent initialized with Cloud LLM (Groq: {Settings.LLM_MODEL})")
+        
+        if self.llm is None:
             logger.info("SQLAgent initialized in DEMO MODE (LLM disabled).")
         
         # Load schema once during initialization

@@ -13,54 +13,10 @@ from src.agents.orchestrator import Orchestrator
 from src.database.connection import get_table_info, test_connection
 from src.ui.components import (
     message_box,
-    sql_display,
-    data_table_display,
-    visualization_display,
-    insights_card,
+    display_agent_result,
     schema_viewer,
     loading_animation
 )
-from src.utils.logger import setup_logger
-
-logger = setup_logger("app")
-
-def display_agent_result(result: Dict[str, Any]):
-    """Render the full result dictionary from the agent using shared components."""
-    # 1. SQL
-    sql_display(result.get("sql_query"))
-
-    # 2. Data
-    df = result.get("results")
-    if df is not None:
-        data_table_display(df)
-    elif result.get("status") == "completed_no_data":
-        st.warning(result.get("answer", "No data found for this query."))
-
-    # 3. Visualization
-    visualization_display(result.get("visualization"))
-
-    # 4. Insights
-    insights_card(result.get("insights"))
-
-    # 5. Reports
-    reports = result.get("reports")
-    if reports:
-        st.markdown("### 📄 Reports")
-        c1, c2 = st.columns(2)
-        with c1:
-            if reports.get("pdf"):
-                with open(reports["pdf"], "rb") as f:
-                    st.download_button("Download PDF", f, file_name="intelliquery_report.pdf", mime="application/pdf", key=f"pdf_{result.get('metadata', {}).get('execution_time', 0)}")
-        with c2:
-            if reports.get("docx"):
-                with open(reports["docx"], "rb") as f:
-                    st.download_button("Download DOCX", f, file_name="intelliquery_report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"docx_{result.get('metadata', {}).get('execution_time', 0)}")
-    
-    # 6. Metadata Performance Footer
-    meta = result.get("metadata")
-    if meta:
-        st.markdown("---")
-        st.caption(f"⏱️ **Performance:** Executed in {meta.get('execution_time', 0)}s | **Volume:** {meta.get('row_count', 0)} rows retrieved")
 
 
 # ── Configuration ────────────────────────────────────────────────────────────

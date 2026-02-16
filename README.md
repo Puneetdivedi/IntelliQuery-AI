@@ -6,56 +6,54 @@
 
 IntelliQuery AI translates natural language questions into SQL queries, executes them against your database, visualizes the results, extracts business insights, and generates downloadable reports—all automatically.
 
-## ⭐ Features
+## ✨ Features
 
-- **Natural Language to SQL**: Converts English questions into complex SQL queries.
-- **Smart Visualization**: Auto-selects the best chart type (Bar, Line, Pie, Scatter) for your data.
-- **AI Business Insights**: Analyzes trends, anomalies, and provides actionable recommendations.
-- **Automated Reporting**: Generates professional PDF and DOCX reports on command.
-- **Interactive UI**: Clean, responsive Streamlit interface with dark/light mode support.
+- **Multi-Agent Orchestration**: Specialized agents for SQL, Visualization, Insights, and Reporting.
+- **Local Intelligence (New)**: Support for **Ollama**, allowing 100% private execution without API keys.
+- **Obsidian Dark Theme**: Premium, modern interface designed for executive presentations.
+- **Automated Reporting**: Downloadable PDF and Word reports generated instantly.
+- **SQL Security**: Integrated query validation and dialect pinning (SQLite).
 
-## 🚀 Quick Start
+## 🏗️ Architecture
 
-### Prerequisites
-- Python 3.10+
-- PostgreSQL or SQLite (Default)
-- Groq Cloud API Key (Free)
+IntelliQuery AI follows a modular, agentic architecture. For a deep dive into how data flows through the system, see [ARCHITECTURE.md](file:///c:/Users/ADMIN/Desktop/IntelliQuery%20AI/ARCHITECTURE.md).
 
-### Installation
+## 🚀 Getting Started
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/intelliquery-ai.git
-   cd intelliquery-ai
-   ```
+### 1. Prerequisites
+- Python 3.9+
+- [Ollama](https://ollama.com/) (Optional: for local/offline intelligence)
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 2. Installation
+```powershell
+# Clone the repository
+git clone <repo-url>
+cd "IntelliQuery AI"
 
-3. **Configure Environment**
-   Copy the example environment file and add your keys:
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env`:
-   ```env
-   GROQ_API_KEY=your_groq_api_key
-   DATABASE_URL=postgresql://user:password@localhost:5432/intelliquery_db
-   ```
+# Run the automated setup
+./setup.ps1
+```
 
-4. **Setup Database**
-   Initialize schema and generate sample data:
-   ```bash
-   python scripts/setup_database.py
-   python scripts/generate_sample_data.py
-   ```
+### 3. Configuration (.env)
+Choose between Cloud (Groq) or Local (Ollama) providers:
 
-5. **Run Application**
-   ```bash
-   streamlit run app.py
-   ```
+**Cloud Mode (Default):**
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_key_here
+```
+
+**Local Mode (No-API):**
+1. Install Ollama and run `ollama run llama3`.
+2. Update `.env`:
+```env
+LLM_PROVIDER=ollama
+LLM_MODEL=llama3
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+## 📊 Demo Mode
+If no API key or local provider is found, the app automatically enables **Demo Mode**. This allows you to explore the platform using high-quality pre-defined patterns for sample queries (e.g., "Top 5 products", "Last 10 sales").
 
 ## 🏗️ Architecture
 

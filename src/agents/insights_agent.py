@@ -23,17 +23,32 @@ class InsightsAgent:
     """Agent responsible for deriving insights from data using LLM."""
 
     def __init__(self):
-        """Initialize the Insights Agent."""
+        """Initialize the Insights Agent with LLM provider (Groq or Ollama)."""
         Settings.validate()
         
-        if Settings.GROQ_API_KEY:
+        self.llm = None
+        
+        if Settings.LLM_PROVIDER == "ollama":
+            try:
+                from langchain_community.chat_models import ChatOllama
+                self.llm = ChatOllama(
+                    model=Settings.LLM_MODEL,
+                    temperature=0.2,
+                    base_url=Settings.OLLAMA_BASE_URL
+                )
+                logger.info(f"InsightsAgent initialized with Local LLM (Ollama: {Settings.LLM_MODEL})")
+            except Exception as e:
+                logger.error(f"Failed to initialize Ollama: {e}")
+        
+        elif Settings.GROQ_API_KEY:
             self.llm = ChatGroq(
                 model_name=Settings.LLM_MODEL,
-                temperature=0.2, # Slight creativity for insights
+                temperature=0.2,
                 api_key=Settings.GROQ_API_KEY
             )
-        else:
-            self.llm = None
+            logger.info(f"InsightsAgent initialized with Cloud LLM (Groq: {Settings.LLM_MODEL})")
+        
+        if self.llm is None:
             logger.info("InsightsAgent initialized in DEMO MODE.")
 
     def _calculate_statistics(self, df: pd.DataFrame) -> dict:
