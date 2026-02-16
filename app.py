@@ -72,22 +72,67 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Custom CSS for Premium Look
 st.markdown("""
 <style>
-    .stChatMessage {
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 0.5rem;
+    /* Main Background and Typography */
+    .stApp {
+        background: radial-gradient(circle at top left, #1a2a6c, #b21f1f, #fdbb2d);
+        background-attachment: fixed;
     }
+    
+    /* Glassmorphism Containers */
+    [data-testid="stChatMessage"] {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background: rgba(15, 15, 15, 0.7);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Elegant Buttons */
     .stButton button {
-        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-    .reportview-container .main .block-container {
-        padding-top: 2rem;
+    .stButton button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
-    h1 {
-        color: #1f77b4;
+    
+    /* Metric Cards */
+    [data-testid="stMetricValue"] {
+        color: #fdbb2d;
+        font-weight: 800;
+    }
+    
+    /* Headings */
+    h1, h2, h3 {
+        color: white !important;
+        font-family: 'Inter', sans-serif;
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* Status Labels */
+    .stStatusWidget {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
