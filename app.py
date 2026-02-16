@@ -22,63 +22,118 @@ from src.ui.components import (
 # ── Configuration ────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="IntelliQuery AI",
-    page_icon="🤖",
+    page_title="IntelliQuery AI | Executive Insights",
+    page_icon="🏙️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for Premium Look
+# Custom CSS for Professional Executive Look
 st.markdown("""
 <style>
-    /* Main Background and Typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* Global Typography */
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Main Background & Gradient Mesh */
     .stApp {
-        background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, rgba(14, 17, 23, 1) 100%), #0E1117;
+        background-color: #0F172A;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.3) 0, transparent 50%), 
+            radial-gradient(at 50% 0%, rgba(79, 70, 229, 0.15) 0, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(30, 58, 138, 0.3) 0, transparent 50%);
         background-attachment: fixed;
     }
     
-    /* Glassmorphism Containers */
-    [data-testid="stChatMessage"] {
-        background: rgba(30, 41, 59, 0.7) !important;
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        margin-bottom: 0.75rem;
-    }
-    
-    /* Sidebar Styling */
+    /* Sidebar Refinement */
     [data-testid="stSidebar"] {
-        background: #0B0E14;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        background-color: rgba(15, 23, 42, 0.95);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
     }
     
-    /* Elegant Buttons */
+    /* Header Styling */
+    .main-header {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(to right, #F8FAFC, #94A3B8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    
+    .sub-header {
+        font-size: 1.1rem;
+        color: #94A3B8;
+        margin-bottom: 2rem;
+    }
+
+    /* Professional Metric Cards */
+    [data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        border-color: #6366F1;
+        background: rgba(30, 41, 59, 0.8);
+    }
+
+    /* Chat Input Refinement */
+    [data-testid="stChatInput"] {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(30, 41, 59, 0.8) !important;
+    }
+
+    /* Status & Spinners */
+    .stStatusWidget {
+        background: rgba(30, 41, 59, 0.8) !important;
+        border-radius: 12px !important;
+    }
+
+    /* Button Animations */
     .stButton button {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        transition: all 0.2s ease;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-    }
-    .stButton button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Metric Cards */
-    [data-testid="stMetricValue"] {
-        color: #6366f1;
-        font-weight: 700;
+    /* Custom Scroller */
+    ::-webkit-scrollbar {
+        width: 8px;
     }
-    
-    /* Headings */
-    h1, h2, h3 {
-        color: #F8FAFC !important;
-        font-family: 'Inter', sans-serif;
-        font-weight: 700;
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    /* System Health Pod */
+    .health-pod {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.85rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s ease;
+    }
+    .health-pod:hover {
+        transform: translateY(-2px);
+        background: rgba(30, 41, 59, 0.6);
+        border-color: rgba(99, 102, 241, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -144,8 +199,6 @@ def process_user_input(prompt: str):
             status.update(label="Complete!", state="complete", expanded=False)
 
         # ── Display Results ────────────────────────────────────────────────
-        
-        # ── Display Results ────────────────────────────────────────────────
         display_agent_result(result)
         
         # Save interaction to history
@@ -156,86 +209,95 @@ def process_user_input(prompt: str):
         })
 
 
-# ── Sidebar ──────────────────────────────────────────────────────────────────
-
+# ── Sidebar Navigation ──────────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://img.icons8.com/cloud/100/1f77b4/business-report.png", width=50) # Placeholder icon
-    st.title("IntelliQuery AI")
-    st.markdown("Natural Language BI Platform")
+    st.image("https://img.icons8.com/cloud/100/1f77b4/business-report.png", width=60) 
+    st.markdown('<h2 style="margin-top:0;">IntelliQuery AI</h2>', unsafe_allow_html=True)
+    st.caption("Strategic Business Intelligence")
     st.divider()
+
+    # 1. Configuration & Health
+    with st.expander("🛠️ System Configuration", expanded=True):
+        provider_options = ["Ollama (Local)", "Groq (Cloud)", "Demo Mode"]
+        current_idx = 0 if Settings.LLM_PROVIDER == "ollama" else (1 if Settings.LLM_PROVIDER == "groq" else 2)
+        
+        selected_provider = st.selectbox(
+            "Intelligence Provider",
+            options=provider_options,
+            index=current_idx
+        )
+        
+        if "Ollama" in selected_provider:
+            Settings.LLM_PROVIDER = "ollama"
+        elif "Groq" in selected_provider:
+            Settings.LLM_PROVIDER = "groq"
+        else:
+            Settings.LLM_PROVIDER = "demo"
+
+        # Mini Health Pod
+        st.markdown('<div class="health-pod">', unsafe_allow_html=True)
+        if Settings.LLM_PROVIDER == "ollama":
+            is_healthy = Settings.check_ollama_health()
+            status_color = "#10B981" if is_healthy else "#EF4444"
+            st.markdown(f"**Ollama**: <span style='color:{status_color}'>{'● Online' if is_healthy else '○ Offline'}</span>", unsafe_allow_html=True)
+        elif Settings.LLM_PROVIDER == "groq":
+            status_color = "#10B981" if Settings.GROQ_API_KEY else "#F59E0B"
+            st.markdown(f"**Groq**: <span style='color:{status_color}'>{'● Active' if Settings.GROQ_API_KEY else '○ Key Missing'}</span>", unsafe_allow_html=True)
+        
+        db_healthy = test_connection()
+        db_color = "#10B981" if db_healthy else "#EF4444"
+        st.markdown(f"**Database**: <span style='color:{db_color}'>{'● Ready' if db_healthy else '○ Error'}</span>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2. Schema Insights
+    with st.expander("📂 Database Schema"):
+        schema_viewer(schema)
     
-    # Schema Viewer
-    schema_viewer(schema)
-    st.divider()
-    
-    # Sample Queries
+    # 3. Quick Actions
     st.markdown("### ⚡ Quick Queries")
     samples = [
         "Top 5 products by revenue",
         "Show sales trend over last year",
-        "Customers by region breakdown",
-        "List orders with 'Processing' status"
+        "Customers by region breakdown"
     ]
-    
     for q in samples:
         if st.button(q, use_container_width=True):
-             # This is a bit tricky in Streamlit - updating input via button 
-             # usually requires session state callback or rerun.
-             # Simplest way: set a session state var and rerun input logic?
-             # For now, let's just insert into chat directly.
              process_user_input(q)
              st.rerun()
 
-    st.divider()
-    
-    # System Status
-    with st.expander("System Status"):
-         db_status = test_connection()
-         if db_status:
-             st.success("Database: Connected (SQLite)")
-         else:
-             st.error("Database: Connection Failed")
-         
-         if Settings.GROQ_API_KEY.startswith("gsk_"):
-             st.success("LLM API: Configured")
-         else:
-             st.warning("LLM API: Missing/Invalid")
-             
-    st.divider()
+    # 4. Utilities
+    st.markdown("---")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🧹 Clear", use_container_width=True, help="Clear cache"):
+            st.cache_data.clear()
+            st.toast("Cache cleared!")
+    with col2:
+        if st.button("🗑️ Reset", use_container_width=True, help="Clear history"):
+            st.session_state.messages = []
+            st.rerun()
 
-    # Utilities
-    if st.button("🧹 Clear Cache", use_container_width=True):
-        st.cache_data.clear()
-        st.cache_resource.clear()
-        st.toast("Cache cleared successfully!")
-
-    # Export History
     if st.session_state.messages:
         chat_str = json.dumps(st.session_state.messages, default=str, indent=2)
         st.download_button(
             "💾 Export Conversation",
             chat_str,
-            file_name=f"intelliquery_chat_{int(time.time())}.json",
+            file_name=f"intelliquery_export.json",
             mime="application/json",
             use_container_width=True
         )
 
-    if st.button("🗑️ Clear History", use_container_width=True):
-        st.session_state.messages = []
-        st.rerun()
-
-    st.markdown("---")
-    st.caption("🚀 v1.1.0 | Built with IntelliQuery AI")
+    st.caption("🚀 v1.1.2 | Executive Intelligence")
 
 
 # ── Main Chat Interface ──────────────────────────────────────────────────────
 
-st.title("Business Intelligence Assistant")
-st.markdown("Ask questions about your data in plain English.")
+st.markdown('<h1 class="main-header">Executive BI Assistant</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Translate natural language into strategic business insights.</p>', unsafe_allow_html=True)
 
 # Welcome Message if no history
 if not st.session_state.messages:
-    st.info("👋 **Welcome!** Try asking something like: *'What were our top 5 products by revenue last quarter?'* or *'Show me the sales distribution by region.'*")
+    st.info("👋 **Welcome to IntelliQuery AI.** I can help you analyze sales trends, identify top customers, and generate executive reports. Try a query below or select a sample from the sidebar.")
 
 # Display History
 for msg in st.session_state.messages:

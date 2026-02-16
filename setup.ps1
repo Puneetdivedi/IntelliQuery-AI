@@ -1,30 +1,37 @@
-# IntelliQuery AI Setup Script
-Write-Host "🚀 Starting IntelliQuery AI Setup..." -ForegroundColor Cyan
+# IntelliQuery AI Professional Setup Script
+# Usage: .\setup.ps1
 
-# 1. Check Python
-if (!(Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Host "❌ Python not found. Please install Python 3.9+ and try again." -ForegroundColor Red
-    exit
+$ErrorActionPreference = "Stop"
+
+Write-Host "🚀 Starting IntelliQuery AI Professional Setup..." -ForegroundColor Cyan
+
+# 1. Environment Check
+Write-Host "🔍 Verifying environment..." -ForegroundColor Yellow
+$pythonExe = Get-Command python.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+if (-not $pythonExe) {
+    Write-Host "❌ Python 3.9+ not found in PATH. Please install Python and try again." -ForegroundColor Red
+    exit 1
 }
+Write-Host "✅ Found Python at: $pythonExe" -ForegroundColor Green
 
-# 2. Install Dependencies
-Write-Host "📦 Installing dependencies from requirements.txt..." -ForegroundColor Yellow
-python -m pip install -r requirements.txt
+# 2. Dependency Management
+Write-Host "📦 Installing/Updating core dependencies..." -ForegroundColor Yellow
+& $pythonExe -m pip install --upgrade pip
+& $pythonExe -m pip install -r requirements.txt
 
-# 3. Setup Database
-Write-Host "🗄️ Setting up database..." -ForegroundColor Yellow
-python scripts/setup_database.py
+# 3. Database Initialization
+Write-Host "🗄️ Initializing Business Intelligence Database..." -ForegroundColor Yellow
+& $pythonExe scripts/setup_database.py
+& $pythonExe scripts/generate_sample_data.py
+Write-Host "✅ Database ready." -ForegroundColor Green
 
-# 4. Generate Sample Data
-Write-Host "📊 Generating realistic sample data..." -ForegroundColor Yellow
-python scripts/generate_sample_data.py
-
-# 5. Create .env if missing
-if (!(Test-Path .env)) {
+# 4. Configuration Setup
+if (-not (Test-Path .env)) {
     Write-Host "📝 Creating .env from template..." -ForegroundColor Yellow
     Copy-Item .env.example .env
-    Write-Host "⚠️  IMPORTANT: Please open .env and add your GROQ_API_KEY!" -ForegroundColor Magenta
+    Write-Host "⚠️  ACTION REQUIRED: Please add your GROQ_API_KEY to the .env file!" -ForegroundColor Magenta
 }
 
-Write-Host "`n✅ Setup Complete! To launch the app, run:" -ForegroundColor Green
-Write-Host "streamlit run app.py" -ForegroundColor Cyan
+Write-Host "`n✨ Setup Complete! ✨" -ForegroundColor Green
+Write-Host "To launch the platform, run: " -ForegroundColor White -NoNewline
+Write-Host ".\run.ps1" -ForegroundColor Cyan

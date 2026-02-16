@@ -83,7 +83,13 @@ class Orchestrator:
                     return result
 
             # ── Safety Check for Normal Mode ───────────────────────────────
-            if not Settings.GROQ_API_KEY:
+            if Settings.LLM_PROVIDER == "ollama":
+                if not Settings.check_ollama_health():
+                    result["status"] = "failed"
+                    result["error"] = f"⚠️ Local LLM Error: Ollama server is not reachable at {Settings.OLLAMA_BASE_URL}. Is it running?"
+                    return result
+
+            if not Settings.GROQ_API_KEY and Settings.LLM_PROVIDER == "groq":
                 # If no demo match and no API key, give a helpful hint
                 result["status"] = "failed"
                 result["error"] = "⚠️ I'm in Demo Mode (No API Key). Please use a 'Quick Query' button or ask for 'Top 5 products', 'Sales trend', 'Region breakdown', or 'Recent sales'."

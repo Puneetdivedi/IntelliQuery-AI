@@ -69,6 +69,16 @@ class Settings:
             raise ValueError("DATABASE_URL is required.")
 
     @classmethod
+    def check_ollama_health(cls) -> bool:
+        """Verify if the Ollama server is reachable."""
+        import requests
+        try:
+            response = requests.get(cls.OLLAMA_BASE_URL, timeout=2)
+            return response.status_code == 200
+        except:
+            return False
+
+    @classmethod
     def ensure_dirs(cls) -> None:
         """Create output / log directories if they do not exist."""
         os.makedirs(cls.REPORTS_DIR, exist_ok=True)

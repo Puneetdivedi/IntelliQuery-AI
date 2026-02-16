@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import json
 import pandas as pd
+from typing import Dict, Any
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from src.config.settings import Settings
+from src.agents.llm_factory import LLMFactory
 from src.utils.logger import setup_logger
 from src.utils.error_handler import APIError
 
@@ -26,30 +28,13 @@ class InsightsAgent:
         """Initialize the Insights Agent with LLM provider (Groq or Ollama)."""
         Settings.validate()
         
-        self.llm = None
-        
-        if Settings.LLM_PROVIDER == "ollama":
-            try:
-                from langchain_community.chat_models import ChatOllama
-                self.llm = ChatOllama(
-                    model=Settings.LLM_MODEL,
-                    temperature=0.2,
-                    base_url=Settings.OLLAMA_BASE_URL
-                )
-                logger.info(f"InsightsAgent initialized with Local LLM (Ollama: {Settings.LLM_MODEL})")
-            except Exception as e:
-                logger.error(f"Failed to initialize Ollama: {e}")
-        
-        elif Settings.GROQ_API_KEY:
-            self.llm = ChatGroq(
-                model_name=Settings.LLM_MODEL,
-                temperature=0.2,
-                api_key=Settings.GROQ_API_KEY
-            )
-            logger.info(f"InsightsAgent initialized with Cloud LLM (Groq: {Settings.LLM_MODEL})")
+        # Use LLM Factory for instantiation
+        self.llm = LLMFactory.create_llm(temperature=0.2)
         
         if self.llm is None:
             logger.info("InsightsAgent initialized in DEMO MODE.")
+        else:
+            logger.info(f"InsightsAgent initialized with {Settings.LLM_PROVIDER} LLM")
 
     def _calculate_statistics(self, df: pd.DataFrame) -> dict:
         """Calculate basic statistics for the dataframe."""

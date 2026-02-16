@@ -15,6 +15,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from src.config.settings import Settings
+from src.agents.llm_factory import LLMFactory
 from src.database.connection import execute_query, get_table_info
 from src.utils.logger import setup_logger
 from src.utils.error_handler import QueryGenerationError, DatabaseError, APIError
@@ -29,30 +30,13 @@ class SQLAgent:
         """Initialize the SQL Agent with LLM (Groq or Ollama) and schema context."""
         Settings.validate()
         
-        self.llm = None
-        
-        if Settings.LLM_PROVIDER == "ollama":
-            try:
-                from langchain_community.chat_models import ChatOllama
-                self.llm = ChatOllama(
-                    model=Settings.LLM_MODEL,
-                    temperature=Settings.LLM_TEMPERATURE,
-                    base_url=Settings.OLLAMA_BASE_URL
-                )
-                logger.info(f"SQLAgent initialized with Local LLM (Ollama: {Settings.LLM_MODEL})")
-            except Exception as e:
-                logger.error(f"Failed to initialize Ollama: {e}")
-        
-        elif Settings.GROQ_API_KEY:
-            self.llm = ChatGroq(
-                model_name=Settings.LLM_MODEL,
-                temperature=Settings.LLM_TEMPERATURE,
-                api_key=Settings.GROQ_API_KEY
-            )
-            logger.info(f"SQLAgent initialized with Cloud LLM (Groq: {Settings.LLM_MODEL})")
+        # Use LLM Factory for instantiation
+        self.llm = LLMFactory.create_llm(temperature=Settings.LLM_TEMPERATURE)
         
         if self.llm is None:
             logger.info("SQLAgent initialized in DEMO MODE (LLM disabled).")
+        else:
+            logger.info(f"SQLAgent initialized with {Settings.LLM_PROVIDER} LLM")
         
         # Load schema once during initialization
         self.schema_info = self._format_schema_for_prompt()
@@ -133,15 +117,27 @@ Output ONLY the SQL."""
             raise QueryGenerationError(f"Failed to generate SQL: {e}")
 
     def validate_sql(self, sql: str) -> bool:
-        """Check provided SQL for destructive commands."""
-        forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "TRUNCATE", "GRANT", "REVOKE"]
-        upper_sql = sql.upper()
+        """
+        Check provided SQL for destructive commands.
+        Blocks DDL/DML and ensures only SELECT/WITH statements are executed.
+        """
+        forbidden = [
+            "DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "TRUNCATE", 
+            "GRANT", "REVOKE", "RENAME", "REPLACE", "MERGE"
+        ]
+        upper_sql = sql.upper().strip()
         
+        # 1. Block known forbidden keywords
         for term in forbidden:
-            # Simple check: word boundary to avoid false positives (like "update_date")
             if re.search(r"\b" + term + r"\b", upper_sql):
                 logger.warning(f"Validation failed: Forbidden keyword '{term}' found in SQL.")
                 return False
+        
+        # 2. Enforce read-only prefix
+        if not (upper_sql.startswith("SELECT") or upper_sql.startswith("WITH")):
+            logger.warning("Validation failed: Query must start with SELECT or WITH.")
+            return False
+            
         return True
 
     def execute_sql(self, sql: str) -> pd.DataFrame:
@@ -152,13 +148,12 @@ Output ONLY the SQL."""
         try:
             return execute_query(sql)
         except DatabaseError as e:
-            # Pass through database errors
             raise e
         except Exception as e:
             logger.error(f"Unexpected error executing SQL: {e}")
             raise DatabaseError(f"Execution failed: {e}")
 
-    def process_question(self, question: str) -> dict:
+    def process_question(self, question: str) -> Dict[str, Any]:
         """Full pipeline: Question -> SQL -> DataFrame -> Result Dict."""
         sql = self.generate_sql(question)
         
