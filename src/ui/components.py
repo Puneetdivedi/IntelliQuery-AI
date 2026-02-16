@@ -97,7 +97,12 @@ def schema_viewer(schema: Dict[str, list]):
 
     st.sidebar.markdown("### 🗄️ Database Schema")
     
+    search = st.sidebar.text_input("🔍 Search Tables", "", key="schema_search").lower()
+    
     for table, columns in schema.items():
+        if search and search not in table.lower():
+            continue
+            
         with st.sidebar.expander(f"📄 {table}"):
             for col in columns:
                  icon = "🔑" if col.get("primary_key") else "🔹"
