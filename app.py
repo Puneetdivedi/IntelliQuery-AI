@@ -224,8 +224,9 @@ with st.sidebar:
     
     # System Status
     with st.expander("System Status"):
-         if test_connection():
-             st.success("Database: Connected")
+         db_status = test_connection()
+         if db_status:
+             st.success("Database: Connected (SQLite)")
          else:
              st.error("Database: Connection Failed")
          
@@ -265,6 +266,10 @@ with st.sidebar:
 
 st.title("Business Intelligence Assistant")
 st.markdown("Ask questions about your data in plain English.")
+
+# Welcome Message if no history
+if not st.session_state.messages:
+    st.info("👋 **Welcome!** Try asking something like: *'What were our top 5 products by revenue last quarter?'* or *'Show me the sales distribution by region.'*")
 
 # Display History
 for msg in st.session_state.messages:
