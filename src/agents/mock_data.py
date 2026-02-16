@@ -63,6 +63,21 @@ MOCK_RESPONSES = {
                 "Consider automated status updates for 'Processing' orders."
             ]
         }
+    },
+    "last 10 sales": {
+        "sql_query": "SELECT o.order_id, c.customer_name, o.order_date, o.status FROM orders o JOIN customers c ON o.customer_id = c.customer_id ORDER BY o.order_date DESC LIMIT 10",
+        "insights": {
+            "summary": "Recent sales activity shows high frequency and diverse customer engagement.",
+            "key_insights": [
+                "Last 10 orders occurred within the last 24 hours.",
+                "Most frequent region in recent sales: North.",
+                "Mix of existing and new customers in the latest batch."
+            ],
+            "recommendations": [
+                "Send follow-up satisfaction surveys to these 10 customers.",
+                "Ensure shipping labels are printed for immediate dispatch."
+            ]
+        }
     }
 }
 
@@ -71,16 +86,19 @@ def get_demo_result(question: str) -> dict:
     q_lower = question.lower().strip()
     
     # Precise mapping
-    if any(k in q_lower for k in ["top 5", "revenue", "best products"]):
+    if any(k in q_lower for k in ["top 5", "top five", "revenue", "best products", "best selling"]):
         return MOCK_RESPONSES["top 5 products by revenue"]
         
-    if any(k in q_lower for k in ["trend", "last year", "over time", "sales growth"]):
+    if any(k in q_lower for k in ["trend", "last year", "over time", "sales growth", "history"]):
         return MOCK_RESPONSES["show sales trend over last year"]
         
-    if any(k in q_lower for k in ["region", "breakdown", "location", "customers by"]):
+    if any(k in q_lower for k in ["region", "breakdown", "location", "customers by", "geography"]):
         return MOCK_RESPONSES["customers by region breakdown"]
         
-    if any(k in q_lower for k in ["processing", "status", "pending"]):
+    if any(k in q_lower for k in ["processing", "pending", "status", "active orders"]):
         return MOCK_RESPONSES["list orders with 'processing' status"]
+        
+    if any(k in q_lower for k in ["last 10", "latest sale", "recent", "last ten"]):
+        return MOCK_RESPONSES["last 10 sales"]
         
     return None

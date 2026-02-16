@@ -51,34 +51,43 @@ class Orchestrator:
             
             if demo_data:
                 logger.info(f"DEMO MODE active for: '{question}'")
-                # Still execute the SQL against the local database to get REAL data
-                df = self.sql_agent.execute_sql(demo_data["sql_query"])
-                
-                result.update({
-                    "status": "completed",
-                    "sql_query": demo_data["sql_query"],
-                    "results": df,
-                    "insights": demo_data["insights"],
-                    "steps": ["Offline Mode: Using premium query patterns", "Data retrieved from local database"],
-                    "metadata": {
-                        "execution_time": round(time.time() - start_time, 2),
-                        "row_count": len(df),
-                        "columns": list(df.columns)
-                    }
-                })
-                
-                # Best-effort visualization for demo
                 try:
-                    viz = self.viz_agent.create_visualization(df, question)
-                    result["visualization"] = viz
-                    result["steps"].append("Viz Engine: Chart auto-generated")
-                except: pass
-                
-                return result
+                    # Execute SQL against local database
+                    df = self.sql_agent.execute_sql(demo_data["sql_query"])
+                    
+                    result.update({
+                        "status": "completed",
+                        "sql_query": demo_data["sql_query"],
+                        "results": df,
+                        "insights": demo_data["insights"],
+                        "steps": ["Offline Mode: Using high-quality query patterns", "Data retrieved from local database"],
+                        "metadata": {
+                            "execution_time": round(time.time() - start_time, 2),
+                            "row_count": len(df),
+                            "columns": list(df.columns)
+                        }
+                    })
+                    
+                    # Best-effort visualization
+                    try:
+                        viz = self.viz_agent.create_visualization(df, question)
+                        result["visualization"] = viz
+                        result["steps"].append("Viz Engine: Chart auto-generated")
+                    except: pass
+                    
+                    return result
+                except Exception as db_err:
+                    logger.error(f"Demo Mode database failure: {db_err}")
+                    result["status"] = "failed"
+                    result["error"] = f"⚠️ Demo Mode failed: Could not query the local database. Have you run 'python scripts/setup_database.py'?"
+                    return result
 
             # ── Safety Check for Normal Mode ───────────────────────────────
             if not Settings.GROQ_API_KEY:
-                raise ValueError("GROQ_API_KEY is missing. Please use a 'Quick Query' button for the demo or provide an API key in .env.")
+                # If no demo match and no API key, give a helpful hint
+                result["status"] = "failed"
+                result["error"] = "⚠️ I'm in Demo Mode (No API Key). Please use a 'Quick Query' button or ask for 'Top 5 products', 'Sales trend', 'Region breakdown', or 'Recent sales'."
+                return result
 
             # 1. Generate & Execute SQL
             logger.info("Pipeline Step 1: SQL Generation & Execution")

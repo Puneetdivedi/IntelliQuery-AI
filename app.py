@@ -130,9 +130,8 @@ st.markdown("""
 
 # ── Initialization ───────────────────────────────────────────────────────────
 
-@st.cache_resource
 def get_orchestrator():
-    """Initialize agent orchestrator (singleton)."""
+    """Initialize agent orchestrator."""
     return Orchestrator()
 
 @st.cache_data

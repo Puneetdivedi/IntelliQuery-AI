@@ -47,12 +47,14 @@ class Settings:
     # ── Validation ───────────────────────────────────────────────────
     @classmethod
     def validate(cls) -> None:
-        """Log warnings for missing settings, but allow startup."""
-        if not cls.GROQ_API_KEY:
-            # Lazy import to avoid circular dependencies
+        """Log warnings for missing settings and treat placeholders as empty."""
+        # Detect common placeholders
+        placeholders = ["your_actual_key_here", "gsk_your_key_here", "your_groq_api_key"]
+        if not cls.GROQ_API_KEY or any(p in cls.GROQ_API_KEY.lower() for p in placeholders) or len(cls.GROQ_API_KEY) < 10:
             from src.utils.logger import setup_logger
             logger = setup_logger("settings")
-            logger.warning("GROQ_API_KEY not found. Application will run in DEMO MODE.")
+            logger.warning("Valid GROQ_API_KEY not found. Application will run in DEMO MODE.")
+            cls.GROQ_API_KEY = "" # Clear placeholder
             cls.DEMO_MODE = True
         
         if not cls.DATABASE_URL:
