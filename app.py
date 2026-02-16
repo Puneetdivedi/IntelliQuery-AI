@@ -25,70 +25,42 @@ from src.utils.logger import setup_logger
 logger = setup_logger("app")
 
 def display_agent_result(result: Dict[str, Any]):
-    """Render the full result dictionary from the agent."""
+    """Render the full result dictionary from the agent using shared components."""
     # 1. SQL
-    sql = result.get("sql_query")
-    if sql:
-        with st.expander("View SQL Query", expanded=False):
-            st.code(sql, language="sql")
+    sql_display(result.get("sql_query"))
 
     # 2. Data
     df = result.get("results")
-    if df is not None and not df.empty:
-        st.dataframe(df.head(100), use_container_width=True)
-        
-        # Download CSV
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            "⬇️ Download CSV", 
-            csv, 
-            "data.csv", 
-            "text/csv", 
-            key=f"csv_{int(time.time())}_{len(str(result))}"
-        )
+    if df is not None:
+        data_table_display(df)
     elif result.get("status") == "completed_no_data":
-        st.warning("Query returned no results.")
+        st.warning(result.get("answer", "No data found for this query."))
 
     # 3. Visualization
-    viz = result.get("visualization")
-    if viz and viz.get("figure"):
-            st.plotly_chart(viz["figure"], use_container_width=True)
+    visualization_display(result.get("visualization"))
 
     # 4. Insights
-    insights = result.get("insights")
-    if insights and insights.get("summary") != "Could not generate AI insights at this time.":
-        with st.container():
-            st.markdown("### 💡 AI Insights")
-            st.info(insights.get("summary"))
-            
-            c1, c2 = st.columns(2)
-            with c1:
-                if insights.get("key_insights"):
-                    st.markdown("**Key Takeaways**")
-                    for k in insights["key_insights"]:
-                        st.markdown(f"- {k}")
-            with c2:
-                if insights.get("recommendations"):
-                    st.markdown("**Recommendations**")
-                    for r in insights["recommendations"]:
-                        st.markdown(f"- {r}")
+    insights_card(result.get("insights"))
 
     # 5. Reports
     reports = result.get("reports")
     if reports:
+        st.markdown("### 📄 Reports")
         c1, c2 = st.columns(2)
         with c1:
             if reports.get("pdf"):
                 with open(reports["pdf"], "rb") as f:
-                    st.download_button("📄 Download PDF Report", f, file_name="report.pdf", mime="application/pdf", key=f"pdf_{int(time.time())}")
+                    st.download_button("Download PDF", f, file_name="intelliquery_report.pdf", mime="application/pdf", key=f"pdf_{result.get('metadata', {}).get('execution_time', 0)}")
         with c2:
             if reports.get("docx"):
                 with open(reports["docx"], "rb") as f:
-                    st.download_button("📝 Download Word Report", f, file_name="report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"docx_{int(time.time())}")
+                    st.download_button("Download DOCX", f, file_name="intelliquery_report.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", key=f"docx_{result.get('metadata', {}).get('execution_time', 0)}")
     
-    # 6. Metadata
-    if result.get("metadata"):
-        st.caption(f"⏱️ Executed in {result['metadata'].get('execution_time', 0)}s | Rows: {result['metadata'].get('row_count', 0)}")
+    # 6. Metadata Performance Footer
+    meta = result.get("metadata")
+    if meta:
+        st.markdown("---")
+        st.caption(f"⏱️ **Performance:** Executed in {meta.get('execution_time', 0)}s | **Volume:** {meta.get('row_count', 0)} rows retrieved")
 
 
 # ── Configuration ────────────────────────────────────────────────────────────

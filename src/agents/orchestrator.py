@@ -51,52 +51,54 @@ class Orchestrator:
 
         try:
             # 1. Generate & Execute SQL
-            logger.info(f"Step 1: SQL Generation for '{question}'")
+            logger.info("Pipeline Step 1: SQL Generation & Execution")
             try:
                 sql_result = self.sql_agent.process_question(question)
                 result.update(sql_result)
-                result["steps"].append("SQL Generated & Executed")
+                result["steps"].append("SQL Engine: Query generated and data retrieved")
             except Exception as e:
                 msg = handle_error(e, context="SQL Agent")
+                result["status"] = "failed"
                 result["error"] = msg
-                result["errors"].append(str(e))
-                logger.error(f"Pipeline failed at SQL stage: {e}")
+                result["errors"].append(f"SQL Error: {str(e)}")
+                logger.error(f"Critical pipeline failure at SQL stage: {e}")
                 return result
 
             df = result.get("results")
             
-            # If no data, stop early
+            # If no data, stop early with a clean status
             if df is None or df.empty:
                 result["status"] = "completed_no_data"
-                result["answer"] = "The query returned no results."
+                result["answer"] = "The database returned an empty set for this query."
+                result["metadata"] = {"execution_time": round(time.time() - start_time, 2), "row_count": 0}
+                logger.info("Pipeline early exit: No data found.")
                 return result
 
             # 2. Visualization (Best Effort)
+            logger.info("Pipeline Step 2: Visualization Engine")
             try:
-                logger.info("Step 2: Visualization")
                 viz_result = self.viz_agent.create_visualization(df, question)
                 result["visualization"] = viz_result
-                result["steps"].append("Visualization Created")
+                result["steps"].append("Viz Engine: Chart auto-generated")
             except Exception as e:
-                logger.warning(f"Visualization failed (continuing pipeline): {e}")
+                logger.warning(f"Non-critical failure (Visualization): {e}")
                 result["visualization"] = None
-                result["errors"].append(f"Viz Error: {e}")
+                result["errors"].append(f"Viz Error: {str(e)}")
 
             # 3. Insights (Best Effort)
+            logger.info("Pipeline Step 3: Analysis Engine")
             try:
-                logger.info("Step 3: Insights Analysis")
                 insights = self.insights_agent.generate_insights(df, question)
                 result["insights"] = insights
-                result["steps"].append("Insights Generated")
+                result["steps"].append("Analysis Engine: Insights extracted")
             except Exception as e:
-                logger.warning(f"Insights failed (continuing pipeline): {e}")
-                result["insights"] = {}
-                result["errors"].append(f"Insights Error: {e}")
+                logger.warning(f"Non-critical failure (Insights): {e}")
+                result["insights"] = {"summary": "Insight generation skipped due to a minor error."}
+                result["errors"].append(f"Insights Error: {str(e)}")
 
             # 4. Report Generation (Best Effort)
+            logger.info("Pipeline Step 4: Document Engine")
             try:
-                logger.info("Step 4: Report Generation")
-                # Prepare data for report agent
                 report_data = {
                     "question": question,
                     "sql_query": result.get("sql_query"),
@@ -107,15 +109,12 @@ class Orchestrator:
                 pdf_path = self.report_agent.generate_pdf_report(report_data)
                 docx_path = self.report_agent.generate_docx_report(report_data)
                 
-                result["reports"] = {
-                    "pdf": pdf_path,
-                    "docx": docx_path
-                }
-                result["steps"].append("Reports Generated")
+                result["reports"] = {"pdf": pdf_path, "docx": docx_path}
+                result["steps"].append("Document Engine: PDF/Word reports ready")
             except Exception as e:
-                logger.warning(f"Report generation failed: {e}")
+                logger.warning(f"Non-critical failure (Reports): {e}")
                 result["reports"] = {}
-                result["errors"].append(f"Report Error: {e}")
+                result["errors"].append(f"Report Error: {str(e)}")
 
             # Finalize
             duration = time.time() - start_time
@@ -126,11 +125,11 @@ class Orchestrator:
             }
             result["status"] = "completed"
             
-            logger.info(f"Pipeline completed in {duration:.2f}s")
+            logger.info(f"Pipeline finished successfully in {duration:.2f}s")
             return result
 
         except Exception as e:
-            logger.critical(f"Unhandled pipeline error: {e}")
+            logger.critical(f"Global pipeline crash: {e}")
             result["status"] = "failed"
-            result["error"] = "An unexpected error occurred processing your request."
+            result["error"] = "An internal engine error occurred. Please check the logs."
             return result

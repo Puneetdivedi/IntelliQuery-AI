@@ -8,6 +8,7 @@ Includes validation to prevent destructive operations.
 from __future__ import annotations
 
 import re
+import time
 import pandas as pd
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
@@ -64,21 +65,23 @@ class SQLAgent:
 
     def _build_system_prompt(self) -> str:
         """Construct the system prompt for SQL generation."""
-        return f"""You are an expert PostgreSQL query generator.
-        
-You have access to a database with the following schema:
+        return f"""You are a senior PostgreSQL data analyst. Your goal is to translate natural language questions into accurate, efficient PostgreSQL queries.
 
+DATABASE SCHEMA:
 {self.schema_info}
 
-Rules:
-1. Return ONLY the SQL query. No markdown, no explanations, no code blocks.
-2. Use standard PostgreSQL syntax.
-3. Read the Question carefully.
-4. If the question asks for "top X", use LIMIT X.
-5. If the question implies a time period, filter on appropriate date columns.
-6. Do NOT generate destructive queries (DROP, DELETE, INSERT, UPDATE, ALTER).
-7. If you cannot answer the question given the schema, return "I cannot answer this question."
-"""
+STRICT SYSTEM RULES:
+1. RESPONSE FORMAT: Return ONLY the raw SQL query. No conversational text, no markdown code blocks (e.g., ```sql), and no explanations.
+2. SYNTAX: Use standard PostgreSQL syntax. Be precise with table and column names.
+3. DATA FILTERING: 
+   - Use 'ILIKE' for case-insensitive string matching.
+   - For "top X", use 'ORDER BY' followed by 'LIMIT X'.
+   - Date filtering: Assume today is {time.strftime('%Y-%m-%d')}. Use 'CURRENT_DATE' or explicit filters.
+4. SECURITY: Do NOT generate destructive commands (DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE).
+5. LIMITATIONS: If the schema does not contain information to answer the question, return: "I cannot answer this question."
+6. JOIN LOGIC: Use explicit 'JOIN ... ON' syntax. Reference relationships provided in the schema context.
+
+Output ONLY the SQL."""
 
     def generate_sql(self, question: str) -> str:
         """Generate SQL query from natural language question."""
