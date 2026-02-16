@@ -219,7 +219,7 @@ def main() -> None:
     Settings.validate()
 
     if not test_connection():
-        print("❌  Cannot connect to the database. Check DATABASE_URL in .env")
+        print("Error: Cannot connect to the database. Check DATABASE_URL in .env")
         sys.exit(1)
 
     engine = get_engine()
@@ -230,12 +230,12 @@ def main() -> None:
         # ── Check if data already exists ─────────────────────────────
         existing = session.query(Region).count()
         if existing > 0:
-            print("⚠️  Data already exists. Skipping generation.")
+            print("Warning: Data already exists. Skipping generation.")
             print("   Drop tables first if you want to regenerate.")
             return
 
-        # ── Regions ──────────────────────────────────────────────────
-        print("🌍  Inserting regions …")
+        # -- Regions --------------------------------------------------
+        print("Inserting regions ...")
         region_objs: list[Region] = []
         for name, country in REGIONS:
             r = Region(region_name=name, country=country)
@@ -243,8 +243,8 @@ def main() -> None:
             region_objs.append(r)
         session.flush()  # get IDs
 
-        # ── Products ─────────────────────────────────────────────────
-        print("📦  Inserting products …")
+        # -- Products -------------------------------------------------
+        print("Inserting products ...")
         product_objs: list[Product] = []
         for category, subcats in CATEGORIES.items():
             for sub_name, product_names in subcats:
@@ -260,10 +260,10 @@ def main() -> None:
                     session.add(p)
                     product_objs.append(p)
         session.flush()
-        print(f"   → {len(product_objs)} products")
+        print(f"   -> {len(product_objs)} products")
 
-        # ── Customers ────────────────────────────────────────────────
-        print("👥  Inserting customers …")
+        # -- Customers ------------------------------------------------
+        print("Inserting customers ...")
         customer_objs: list[Customer] = []
         start_date = date.today() - timedelta(days=730)
         for i in range(1000):
@@ -281,8 +281,8 @@ def main() -> None:
             customer_objs.append(c)
         session.flush()
 
-        # ── Orders & Order Items ─────────────────────────────────────
-        print("🛒  Inserting orders & order items …")
+        # -- Orders & Order Items -------------------------------------
+        print("Inserting orders & order items ...")
         today = date.today()
         order_start = today - timedelta(days=730)
         total_items = 0
@@ -333,10 +333,10 @@ def main() -> None:
                 session.add(item)
                 total_items += 1
 
-        print(f"   → 5 000 orders, {total_items:,} order items")
+        print(f"   -> 5000 orders, {total_items:,} order items")
 
     print()
-    print("✅  Sample data generated successfully!")
+    print("Sample data generated successfully!")
 
 
 if __name__ == "__main__":

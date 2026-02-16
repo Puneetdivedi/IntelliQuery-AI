@@ -17,7 +17,7 @@ from langchain_core.output_parsers import StrOutputParser
 from src.config.settings import Settings
 from src.database.connection import execute_query, get_table_info
 from src.utils.logger import setup_logger
-from src.utils.error_handler import QueryGenerationError, DatabaseError
+from src.utils.error_handler import QueryGenerationError, DatabaseError, APIError
 
 logger = setup_logger("sql_agent")
 
@@ -65,18 +65,18 @@ class SQLAgent:
 
     def _build_system_prompt(self) -> str:
         """Construct the system prompt for SQL generation."""
-        return f"""You are a senior PostgreSQL data analyst. Your goal is to translate natural language questions into accurate, efficient PostgreSQL queries.
+        return f"""You are a senior SQLite data analyst. Your goal is to translate natural language questions into accurate, efficient SQLite queries.
 
 DATABASE SCHEMA:
 {self.schema_info}
 
 STRICT SYSTEM RULES:
 1. RESPONSE FORMAT: Return ONLY the raw SQL query. No conversational text, no markdown code blocks (e.g., ```sql), and no explanations.
-2. SYNTAX: Use standard PostgreSQL syntax. Be precise with table and column names.
+2. SYNTAX: Use standard SQLite syntax. Be precise with table and column names.
 3. DATA FILTERING: 
-   - Use 'ILIKE' for case-insensitive string matching.
+   - Use 'LIKE' for string matching (SQLite LIKE is case-insensitive by default).
    - For "top X", use 'ORDER BY' followed by 'LIMIT X'.
-   - Date filtering: Assume today is {time.strftime('%Y-%m-%d')}. Use 'CURRENT_DATE' or explicit filters.
+   - Date filtering: Assume today is {time.strftime('%Y-%m-%d')}. Use 'date()' or 'strftime()' functions.
 4. SECURITY: Do NOT generate destructive commands (DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE).
 5. LIMITATIONS: If the schema does not contain information to answer the question, return: "I cannot answer this question."
 6. JOIN LOGIC: Use explicit 'JOIN ... ON' syntax. Reference relationships provided in the schema context.
@@ -104,7 +104,13 @@ Output ONLY the SQL."""
             return clean_sql
             
         except Exception as e:
-            logger.error(f"Error generating SQL: {e}")
+            err_msg = str(e)
+            logger.error(f"Error generating SQL: {err_msg}")
+            
+            # Detect API Authentication issues
+            if "401" in err_msg or "invalid_api_key" in err_msg.lower():
+                raise APIError("Invalid Groq API Key. Please check your .env file.")
+            
             raise QueryGenerationError(f"Failed to generate SQL: {e}")
 
     def validate_sql(self, sql: str) -> bool:

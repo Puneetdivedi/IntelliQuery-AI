@@ -51,19 +51,18 @@ _USER_MESSAGES: dict[type, str] = {
 
 
 def handle_error(error: Exception, context: str = "") -> str:
-    """Convert a technical exception into a user-friendly message.
-
-    Args:
-        error: The caught exception.
-        context: Optional extra context (e.g. the agent name).
-
-    Returns:
-        A human-readable error string safe to display in the UI.
-    """
-    user_msg = _USER_MESSAGES.get(
-        type(error),
-        "⚠️ An unexpected error occurred. Please try again.",
-    )
+    """Convert a technical exception into a user-friendly message."""
+    # Use custom message if the exception provides one (useful for APIError)
+    if isinstance(error, (APIError, DatabaseError, QueryGenerationError)) and str(error):
+        user_msg = str(error)
+        if not user_msg.startswith("⚠️"):
+            user_msg = f"⚠️ {user_msg}"
+    else:
+        user_msg = _USER_MESSAGES.get(
+            type(error),
+            "⚠️ An unexpected error occurred. Please try again.",
+        )
+    
     # Append context if provided
     if context:
         user_msg = f"[{context}] {user_msg}"
