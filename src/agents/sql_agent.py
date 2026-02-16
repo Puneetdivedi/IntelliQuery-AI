@@ -29,11 +29,15 @@ class SQLAgent:
         """Initialize the SQL Agent with LLM and schema context."""
         Settings.validate()
         
-        self.llm = ChatGroq(
-            model_name=Settings.LLM_MODEL,
-            temperature=0,
-            api_key=Settings.GROQ_API_KEY
-        )
+        if Settings.GROQ_API_KEY:
+            self.llm = ChatGroq(
+                model_name=Settings.LLM_MODEL,
+                temperature=0,
+                api_key=Settings.GROQ_API_KEY
+            )
+        else:
+            self.llm = None
+            logger.info("SQLAgent initialized in DEMO MODE (LLM disabled).")
         
         # Load schema once during initialization
         self.schema_info = self._format_schema_for_prompt()

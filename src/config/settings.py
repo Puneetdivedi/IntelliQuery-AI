@@ -16,8 +16,9 @@ load_dotenv(dotenv_path=_env_path)
 class Settings:
     """Centralised configuration for IntelliQuery AI."""
 
-    # ── API Keys ──────────────────────────────────────────────────────
+    # -- API Keys ------------------------------------------------------
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    DEMO_MODE: bool = False
 
     # ── Database ──────────────────────────────────────────────────────
     DATABASE_URL: str = os.getenv(
@@ -46,17 +47,16 @@ class Settings:
     # ── Validation ───────────────────────────────────────────────────
     @classmethod
     def validate(cls) -> None:
-        """Raise ``ValueError`` if required settings are missing."""
-        missing: list[str] = []
+        """Log warnings for missing settings, but allow startup."""
         if not cls.GROQ_API_KEY:
-            missing.append("GROQ_API_KEY")
+            # Lazy import to avoid circular dependencies
+            from src.utils.logger import setup_logger
+            logger = setup_logger("settings")
+            logger.warning("GROQ_API_KEY not found. Application will run in DEMO MODE.")
+            cls.DEMO_MODE = True
+        
         if not cls.DATABASE_URL:
-            missing.append("DATABASE_URL")
-        if missing:
-            raise ValueError(
-                f"Missing required environment variable(s): {', '.join(missing)}. "
-                "Please set them in a .env file or export them."
-            )
+            raise ValueError("DATABASE_URL is required.")
 
     @classmethod
     def ensure_dirs(cls) -> None:

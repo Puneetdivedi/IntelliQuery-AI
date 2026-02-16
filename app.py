@@ -154,6 +154,10 @@ try:
     Settings.validate()
     orchestrator = get_orchestrator()
     schema = get_schema()
+    
+    # ── Demo Mode Banner ───────────────────────────────────────────
+    if not Settings.GROQ_API_KEY:
+        st.warning("🚀 **DEMO MODE ACTIVE**: No API Key found. High-performance AI processing is available via the **Quick Query** buttons in the sidebar. Standard chat requires an API key.")
 except Exception as e:
     st.error(f"Startup Error: {e}")
     st.stop()

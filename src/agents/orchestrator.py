@@ -32,15 +32,11 @@ class Orchestrator:
 
     def process_query(self, question: str, conversation_history: list = None) -> dict[str, Any]:
         """
-        Process a user question through the full pipeline.
-        
-        Args:
-            question: The natural language query.
-            conversation_history: List of previous interactions (not used in v1 but ready for context).
-            
-        Returns:
-            Dictionary containing results, processing metadata, and paths to artifacts.
+        Process a user question through the full pipeline with Demo Mode support.
         """
+        from src.config.settings import Settings
+        from src.agents.mock_data import get_demo_result
+
         start_time = time.time()
         result: dict[str, Any] = {
             "question": question,
@@ -50,6 +46,40 @@ class Orchestrator:
         }
 
         try:
+            # ── Step 0: Demo Mode Check ────────────────────────────────────
+            demo_data = get_demo_result(question)
+            
+            if demo_data:
+                logger.info(f"DEMO MODE active for: '{question}'")
+                # Still execute the SQL against the local database to get REAL data
+                df = self.sql_agent.execute_sql(demo_data["sql_query"])
+                
+                result.update({
+                    "status": "completed",
+                    "sql_query": demo_data["sql_query"],
+                    "results": df,
+                    "insights": demo_data["insights"],
+                    "steps": ["Offline Mode: Using premium query patterns", "Data retrieved from local database"],
+                    "metadata": {
+                        "execution_time": round(time.time() - start_time, 2),
+                        "row_count": len(df),
+                        "columns": list(df.columns)
+                    }
+                })
+                
+                # Best-effort visualization for demo
+                try:
+                    viz = self.viz_agent.create_visualization(df, question)
+                    result["visualization"] = viz
+                    result["steps"].append("Viz Engine: Chart auto-generated")
+                except: pass
+                
+                return result
+
+            # ── Safety Check for Normal Mode ───────────────────────────────
+            if not Settings.GROQ_API_KEY:
+                raise ValueError("GROQ_API_KEY is missing. Please use a 'Quick Query' button for the demo or provide an API key in .env.")
+
             # 1. Generate & Execute SQL
             logger.info("Pipeline Step 1: SQL Generation & Execution")
             try:

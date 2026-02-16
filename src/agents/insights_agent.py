@@ -26,11 +26,15 @@ class InsightsAgent:
         """Initialize the Insights Agent."""
         Settings.validate()
         
-        self.llm = ChatGroq(
-            model_name=Settings.LLM_MODEL,
-            temperature=0.2, # Slight creativity for insights
-            api_key=Settings.GROQ_API_KEY
-        )
+        if Settings.GROQ_API_KEY:
+            self.llm = ChatGroq(
+                model_name=Settings.LLM_MODEL,
+                temperature=0.2, # Slight creativity for insights
+                api_key=Settings.GROQ_API_KEY
+            )
+        else:
+            self.llm = None
+            logger.info("InsightsAgent initialized in DEMO MODE.")
 
     def _calculate_statistics(self, df: pd.DataFrame) -> dict:
         """Calculate basic statistics for the dataframe."""
