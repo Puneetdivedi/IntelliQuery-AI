@@ -77,62 +77,52 @@ st.markdown("""
 <style>
     /* Main Background and Typography */
     .stApp {
-        background: radial-gradient(circle at top left, #1a2a6c, #b21f1f, #fdbb2d);
+        background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.15) 0%, rgba(14, 17, 23, 1) 100%), #0E1117;
         background-attachment: fixed;
     }
     
     /* Glassmorphism Containers */
     [data-testid="stChatMessage"] {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        padding: 1.5rem;
-        margin-bottom: 1rem;
+        background: rgba(30, 41, 59, 0.7) !important;
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        margin-bottom: 0.75rem;
     }
     
     /* Sidebar Styling */
     [data-testid="stSidebar"] {
-        background: rgba(15, 15, 15, 0.7);
-        backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        background: #0B0E14;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     /* Elegant Buttons */
     .stButton button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
         color: white;
         border: none;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
     .stButton button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        transform: scale(1.02);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
     }
     
     /* Metric Cards */
     [data-testid="stMetricValue"] {
-        color: #fdbb2d;
-        font-weight: 800;
+        color: #6366f1;
+        font-weight: 700;
     }
     
     /* Headings */
     h1, h2, h3 {
-        color: white !important;
+        color: #F8FAFC !important;
         font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-    
-    /* Status Labels */
-    .stStatusWidget {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
+        font-weight: 700;
     }
 </style>
 """, unsafe_allow_html=True)

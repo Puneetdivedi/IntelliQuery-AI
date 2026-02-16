@@ -67,11 +67,20 @@ MOCK_RESPONSES = {
 }
 
 def get_demo_result(question: str) -> dict:
-    """Check if question matches a demo query and return mock data."""
+    """Check if question matches a demo query using flexible keyword matching."""
     q_lower = question.lower().strip()
     
-    # Simple keyword match
-    for mock_q, data in MOCK_RESPONSES.items():
-        if mock_q in q_lower:
-            return data
+    # Precise mapping
+    if any(k in q_lower for k in ["top 5", "revenue", "best products"]):
+        return MOCK_RESPONSES["top 5 products by revenue"]
+        
+    if any(k in q_lower for k in ["trend", "last year", "over time", "sales growth"]):
+        return MOCK_RESPONSES["show sales trend over last year"]
+        
+    if any(k in q_lower for k in ["region", "breakdown", "location", "customers by"]):
+        return MOCK_RESPONSES["customers by region breakdown"]
+        
+    if any(k in q_lower for k in ["processing", "status", "pending"]):
+        return MOCK_RESPONSES["list orders with 'processing' status"]
+        
     return None
